@@ -52,14 +52,7 @@ public class BCHCoder {
         else if (m == 18) p[7] = 1;
         else if (m == 19) p[1] = p[5] = p[6] = 1;
         else if (m == 20) p[3] = 1;
-        if (debug) {
 
-            System.out.print("p(x) = ");
-            for (int i = 0; i <= m; i++) {
-                System.out.println(" {0:D}" + p[i]);
-            }
-            // Console.WriteLine();
-        }
         n = (int) Math.pow(2, m) - 1;
         ninf = (n + 1) / 2 - 1;
 
@@ -181,7 +174,7 @@ public class BCHCoder {
             throw new BchException(BchErrorCode.WRONG_PARAMETRES);
         }
         //if (debug) {
-        System.out.println("This is a " + length + k + d + "binary BCH code");
+        System.out.println("This is a (" + length + " " + k + " " + d + ") binary BCH code");
         //}
 
         // Compute the generator polynomial
@@ -197,17 +190,6 @@ public class BCHCoder {
                 }
             }
             g[0] = alpha_to[(index_of[g[0]] + zeros[ii]) % n];
-        }
-        if (debug) {
-            System.out.println("Generator polynomial:");
-            System.out.print("g(x) = ");
-            for (ii = 0; ii <= rdncy; ii++) {
-                System.out.println(g[ii]);
-                if ((ii > 0) && ((ii % 50) == 0)) {
-                    System.out.println();
-                }
-            }
-            System.out.println();
         }
     }
 
@@ -291,10 +273,6 @@ public class BCHCoder {
         reg = new int[201];
 
         t2 = 2 * t;
-
-        if (debug) {
-            System.out.print("S(x) = ");
-        }
 
         // first form the syndromes
         for (i = 1; i <= t2; i++) {
@@ -422,7 +400,7 @@ public class BCHCoder {
 
             u++;
             if (l[u] <= t) {
-// Can correct errors
+                // Can correct errors
                 // put elp into index form
                 for (i = 0; i <= l[u]; i++) {
                     elp[u][i] = index_of[elp[u][i]];
@@ -805,7 +783,6 @@ public class BCHCoder {
         WriteBits(new BitArray(bits));
     }
 
-
     public static void main(String[] args) throws BchException {
         int dataLenMax = 4094;
         int blockSize = 255;
@@ -823,15 +800,9 @@ public class BCHCoder {
                     : (1 + rnd.nextInt(50) % ((int) Math.round(blockSize * 0.17)));
             byte[] data2 = encode_systematic(data1, t, blockSize);
             int errCnt = 0;
-                /*Console.WriteLine("{0:D}:", data1.Length);
-                WriteBits(data1);
-                Console.WriteLine("{0:D}:", data2.Length);
-                WriteBits(data2);*/
+
             for (int j = 0; j < data1.length; ++j) {
-                //if (data1[j] != data2[j + sizeof(int)])
                 if (data1[j] != data2[j + Integer.SIZE / Byte.SIZE]) {
-                    //Console.WriteLine("Error at {0:D}, ({1:D}, {2:D})!", j, data1[j], data2[j + sizeof(int)]);
-                    //break;
                     ++errCnt;
                 }
             }

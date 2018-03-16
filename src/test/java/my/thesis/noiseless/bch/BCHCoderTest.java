@@ -35,30 +35,15 @@ public class BCHCoderTest {
             assertNotNull(data2);
             int errCnt = 0;
             for (int j = 0; j < data1.length; ++j) {
-                //if (data1[j] != data2[j + sizeof(int)])
                 if (data1[j] != data2[j + 4]) {
-                    //break;
                     ++errCnt;
                 }
             }
-            if (errCnt > 0) {
-                System.out.print("Errors cnt " + errCnt + " " + data1.length + " !");
-            }
+            assertEquals("Errors cnt " + errCnt + " " + data1.length + " !", errCnt, 0);
             byte[] data3 = null;
             try {
                 data3 = BCHCoder.decode_systematic(data2, t, blockSize);
             } catch (BchException e) {
-                /*BCHCoder.WriteBits(data1);
-                for (int k = 0; k < data1.length; ++k) {
-                    System.out.println(data1[k]);
-                }
-                System.out.println("");
-                BCHCoder.WriteBits(data2);
-                for (int k = 0; k < data2.length; ++k) {
-                    System.out.println(data2[k]);
-                }
-                System.out.println("");*/
-
                 fail(e.getMessage());
             }
 
