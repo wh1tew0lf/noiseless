@@ -1,4 +1,4 @@
-package my.thesis.noiseless.bch3;
+package my.thesis.noiseless.bch;
 
 public class BitArray {
     private boolean[] bool;

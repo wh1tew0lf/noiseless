@@ -1,7 +1,7 @@
 package my.thesis;
 
-import my.thesis.noiseless.bch3.BCHCoder;
-import my.thesis.noiseless.bch3.BchException;
+import my.thesis.noiseless.bch.BCHCoder;
+import my.thesis.noiseless.bch.BchException;
 
 public class Main {
 

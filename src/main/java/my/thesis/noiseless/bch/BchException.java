@@ -1,4 +1,4 @@
-package my.thesis.noiseless.bch3;
+package my.thesis.noiseless.bch;
 
 public class BchException extends Exception {
     public BchException(BchErrorCode code, String param){

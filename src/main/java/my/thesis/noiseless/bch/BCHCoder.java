@@ -1,4 +1,4 @@
-package my.thesis.noiseless.bch3;
+package my.thesis.noiseless.bch;
 
 import java.util.Random;
 import java.util.Scanner;

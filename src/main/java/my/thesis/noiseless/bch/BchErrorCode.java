@@ -1,4 +1,4 @@
-package my.thesis.noiseless.bch3;
+package my.thesis.noiseless.bch;
 
 public enum BchErrorCode {
     WRONG_M_VALUE("M should be between %s"),
