@@ -27,10 +27,10 @@ public class BCHCoder {
         }
         p = new int[m + 1];
 
-       /* for (int i = 1; i < m; i++)
+        for (int i = 1; i < m; i++)
         {
             p[i] = 0;
-        }*/
+        }
 
         p[0] = p[m] = 1;
         if (m == 2) p[1] = 1;
@@ -497,7 +497,7 @@ public class BCHCoder {
     public static byte[] encode(byte[] data, int t, int length) throws BchException {
         boolean autoLen = (0 == length);
         // length = autoLen ? (8*(data.length + sizeof(int))) : length;
-        length = autoLen ? (8 * (data.length + 4)) : length;
+        length = autoLen ? (8 * (data.length) + Integer.SIZE) : length;
 
         int m = (int) Math.round(Math.log(length + 1) / Math.log(2));
         if ((m > MAX_M) && !autoLen) {
@@ -510,16 +510,16 @@ public class BCHCoder {
         }
 
         // byte[] dataWithLen = new byte[data.length + sizeof(int)];
-        byte[] dataWithLen = new byte[data.length + 4];
+        byte[] dataWithLen = new byte[data.length + Integer.SIZE / Byte.SIZE];
         int size = data.length;
         //for (int i = 0; i < sizeof(int); ++i)
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < Integer.SIZE / Byte.SIZE; ++i) {
             dataWithLen[i] = (byte) (size % 256);
             size /= 256;
         }
         for (int i = 0; i < data.length; ++i) {
             //  dataWithLen[i + sizeof(int)] = data[i];
-            dataWithLen[i + 4] = data[i];
+            dataWithLen[i + Integer.SIZE / Byte.SIZE] = data[i];
         }
 
         BCHCoder bch;
@@ -589,7 +589,7 @@ public class BCHCoder {
         int blocksCount = (int) Math.round((8 * data.length) / (double) (bch.length + 1));
 
         // int[] output = new int[bch.k*blocksCount + sizeof(int)*8];
-        int[] output = new int[bch.k * blocksCount + 4 * 8];
+        int[] output = new int[bch.k * blocksCount + Integer.SIZE / Byte.SIZE * 8];
         for (int ind = 0; ind < blocksCount; ++ind) {
             int[] input = new int[bch.length + 1];
             for (int i = 0; i < input.length; ++i) {
@@ -613,7 +613,7 @@ public class BCHCoder {
         //parse size
         int size = 0;
         // for (int i = sizeof(int); i > 0; --i)
-        for (int i = 4; i > 0; --i) {
+        for (int i = Integer.SIZE / Byte.SIZE; i > 0; --i) {
             for (int j = 8; j > 0; --j) {
                 size = size * 2 + output[(i - 1) * 8 + (j - 1)];
             }
@@ -629,7 +629,7 @@ public class BCHCoder {
                 decoded[i / 8] = 0;
             }
             // int i2 = i + sizeof(int)*8;
-            int i2 = i + 4 * 8;
+            int i2 = i + Integer.SIZE / Byte.SIZE * 8;
             decoded[i / 8] += output[i2] > 0 ? (byte) Math.pow(2, i2 % 8) : (byte) 0;
         }
 
@@ -645,7 +645,7 @@ public class BCHCoder {
     public static byte[] encode_systematic(byte[] data, int t, int length) throws BchException {
         boolean autoLen = (0 == length);
         // length = autoLen ? (8*(data.length + sizeof(int))) : length;
-        length = autoLen ? (8 * (data.length + 4)) : length;
+        length = autoLen ? (8 * (data.length) + Integer.SIZE) : length;
 
         int m = (int) Math.round(Math.log(length + 1) / Math.log(2));
         if ((m > MAX_M) && !autoLen) {
@@ -658,16 +658,16 @@ public class BCHCoder {
         }
 
         // byte[] dataWithLen = new byte[data.length + sizeof(int)];
-        byte[] dataWithLen = new byte[data.length + 4];
+        byte[] dataWithLen = new byte[data.length + Integer.SIZE / Byte.SIZE];
         int size = data.length;
         //for (int i = 0; i < sizeof(int); ++i)
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < Integer.SIZE / Byte.SIZE; ++i) {
             dataWithLen[i] = (byte) (size % 256);
             size /= 256;
         }
         for (int i = 0; i < data.length; ++i) {
             // dataWithLen[i + sizeof(int)] = data[i];
-            dataWithLen[i + 4] = data[i];
+            dataWithLen[i + Integer.SIZE / Byte.SIZE] = data[i];
         }
 
         BCHCoder bch;
@@ -677,7 +677,7 @@ public class BCHCoder {
             length = (int) Math.pow(2, m) - 1;
         } while ((m <= MAX_M) && (bch.k < (8 * dataWithLen.length)) && autoLen);
 
-        int blocksCount = (int) Math.round((8 * dataWithLen.length) / (double) bch.k);
+        int blocksCount = (int) Math.ceil((8 * dataWithLen.length) / (double) bch.k);
 
         int[] output = new int[(bch.length + 1) * blocksCount];
         for (int ind = 0; ind < blocksCount; ++ind) {
@@ -742,7 +742,7 @@ public class BCHCoder {
         int blocksCount = (int) Math.round((8 * data.length) / (double) (bch.length + 1));
 
         //  int[] output = new int[bch.k*blocksCount + sizeof(int)*8];
-        int[] output = new int[bch.k * blocksCount + 4 * 8];
+        int[] output = new int[bch.k * blocksCount + Integer.SIZE / Byte.SIZE * 8];
         for (int ind = 0; ind < blocksCount; ++ind) {
             int[] input = new int[bch.length + 1];
             for (int i = 0; i < input.length; ++i) {
@@ -771,7 +771,7 @@ public class BCHCoder {
         //parse size
         int size = 0;
         //   for (int i = sizeof(int); i > 0; --i)
-        for (int i = 4; i > 0; --i) {
+        for (int i = Integer.SIZE / Byte.SIZE; i > 0; --i) {
             for (int j = 8; j > 0; --j) {
                 size = size * 2 + output[(i - 1) * 8 + (j - 1)];
             }
@@ -787,7 +787,7 @@ public class BCHCoder {
                 decoded[i / 8] = 0;
             }
             // int i2 = i + sizeof(int)*8;
-            int i2 = i + 4 * 8;
+            int i2 = i + Integer.SIZE / Byte.SIZE * 8;
             decoded[i / 8] += output[i2] > 0 ? (byte) Math.pow(2, i2 % 8) : (byte) 0;
         }
 
@@ -829,7 +829,7 @@ public class BCHCoder {
                 WriteBits(data2);*/
             for (int j = 0; j < data1.length; ++j) {
                 //if (data1[j] != data2[j + sizeof(int)])
-                if (data1[j] != data2[j + 4]) {
+                if (data1[j] != data2[j + Integer.SIZE / Byte.SIZE]) {
                     //Console.WriteLine("Error at {0:D}, ({1:D}, {2:D})!", j, data1[j], data2[j + sizeof(int)]);
                     //break;
                     ++errCnt;

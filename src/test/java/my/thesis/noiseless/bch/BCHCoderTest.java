@@ -37,6 +37,7 @@ public class BCHCoderTest {
             for (int j = 0; j < data1.length; ++j) {
                 //if (data1[j] != data2[j + sizeof(int)])
                 if (data1[j] != data2[j + 4]) {
+                    //break;
                     ++errCnt;
                 }
             }
@@ -65,7 +66,11 @@ public class BCHCoderTest {
             assertEquals(data3.length, data1.length);
 
             for (int j = 0; j < data3.length; ++j) {
-                assertEquals("Incorrect in byte-to-byte comparing", data3[j], data1[j]);
+                int zero = (int) Math.pow(2, Byte.SIZE - 1);
+                int mod = (int) Math.pow(2, Byte.SIZE);
+                int first = (zero + data3[j]) % mod;
+                int second = (zero + data1[j]) % mod;
+                assertEquals("Incorrect in byte-to-byte comparing", first, second);
             }
         }
     }
