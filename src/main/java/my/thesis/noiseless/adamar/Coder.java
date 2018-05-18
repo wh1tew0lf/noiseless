@@ -1,17 +1,6 @@
+package my.thesis.noiseless.adamar;
 
 public class Coder {
-
-    public static void WriteBits(BitArray bitArray) {
-        for (boolean b : bitArray.getBoolArray())
-            System.out.print( b  ? 1 : 0);
-        System.out.println();
-    }
-
-
-    public static void WriteBits(byte[] bits) {
-        WriteBits(new BitArray(bits));
-    }
-
 
     public static byte[] encode(byte[] data, byte blockSize) {
         if (blockSize <= 1) {
@@ -43,26 +32,23 @@ public class Coder {
             }
         }
 
-        byte[] result= new byte[(int) Math.ceil(buf.length()/8.0)];
-        System.out.println("byte mas" + result.length);
-        System.out.println(buf.length());
-        buf.CopyTo(result,0);
+        byte[] result = new byte[(int) Math.ceil(buf.length() / 8.0)];
+        buf.CopyTo(result, 0);
 
         return result;
     }
 
+    public static byte[] decode(byte[] data, byte blockSize) {
+        int size = (int) Math.pow(2, blockSize - 1);
+        byte[][] A = new byte[size][size];
+        A[0][0] = A[0][1] = A[1][0] = 1;
+        A[1][1] = -1;
 
-    public static byte[] decode(byte[] data, byte blockSize){
-        int size=(int) Math.pow(2, blockSize-1);
-        byte[][] A =new byte[size][size];
-        A [0][0] = A [0][1] = A [1][0] = 1;
-        A [1][1] = -1;
-
-        for(int sz=0; sz<size;sz*=2){
-            for(int i=0;i<sz;i++){
-                for (int j=0;j<sz;j++){
-                    A[sz+i][j]=A[i][sz+j]=A[i][j];
-                    A[sz+i][sz+j]=(byte)-A[i][j];
+        for (int sz = 1; sz < size; sz *= 2) {
+            for (int i = 0; i < sz; i++) {
+                for (int j = 0; j < sz; j++) {
+                    A[sz + i][j] = A[i][sz + j] = A[i][j];
+                    A[sz + i][sz + j] = (byte) -A[i][j];
                 }
             }
         }
@@ -70,87 +56,93 @@ public class Coder {
         BitArray code = new BitArray(data);
 
 
-        byte[] vect= new byte[code.length()];
-        for (int i=0; i<vect.length; i++)
-            vect[i]=(byte)(code.getBoolArray()[i] ? 1 :-1);
+        byte[] vect = new byte[code.length()];
+        for (int i = 0; i < vect.length; i++)
+            vect[i] = (byte) (code.getBoolValue(i) ? 1 : -1);
 
-        int blocksCount = (int) Math.ceil((double)(code.length()/size));
+        int blocksCount = (int) Math.ceil((double) (code.length() / size));
 
 
         //Fix Errors
-
-        for (int i=0; i<blocksCount; i++){
-            int[] rvect= new  int[size];
-            for (int j=0; j<size;j++){
-                for (int k=0; k<size; k++)
-                    rvect[j] += A[j][k]*vect[i*size+k];
+        for (int i = 0; i < blocksCount; i++) {
+            int[] rvect = new int[size];
+            for (int j = 0; j < size; j++) {
+                for (int k = 0; k < size; k++)
+                    rvect[j] += A[j][k] * vect[i * size + k];
             }
 
-            int maxInd =0;
-            for (int j=1; j<rvect.length; j++){
-                if(Math.abs(rvect[j])>Math.abs(rvect[maxInd]))
-                    maxInd=j;
+            int maxInd = 0;
+            for (int j = 1; j < rvect.length; j++) {
+                if (Math.abs(rvect[j]) > Math.abs(rvect[maxInd]))
+                    maxInd = j;
             }
 
-            for (int k=0; k<size;k++)
-                code.getBoolArray()[i*size +k] = rvect[maxInd] * A[maxInd][k] > 0;
+            for (int k = 0; k < size; k++)
+                code.getBoolArray()[i * size + k] = rvect[maxInd] * A[maxInd][k] > 0;
         }
 
         //Decode
-        BitArray value = new BitArray(blockSize*blocksCount, false);
+        BitArray value = new BitArray(blockSize * blocksCount, false);
 
-        for (int i=0; i<blocksCount; i++){
-            value.setBoolValue((i*blockSize),code.getBoolValue((i*size)));
-            for (int j=1; j<blockSize; j++){
-                value.setBoolValue(((1+i)*blockSize-j),
-                        (code.getBoolValue((i*size+ (int)Math.pow(2,j-1))) ^ value.getBoolValue((i*blockSize))));
+        for (int i = 0; i < blocksCount; i++) {
+            value.setBoolValue((i * blockSize), code.getBoolValue((i * size)));
+            for (int j = 1; j < blockSize; j++) {
+                value.setBoolValue(((1 + i) * blockSize - j),
+                        (code.getBoolValue((i * size + (int) Math.pow(2, j - 1))) ^ value.getBoolValue((i * blockSize))));
             }
         }
 
 
-        byte[] result = new byte[(int)Math.ceil(value.length()/8.0)];
-        value.CopyTo(result,0);
+        byte[] result = new byte[(int) Math.ceil(value.length() / 8.0)];
+        value.CopyTo(result, 0);
         return result;
     }
 
-
-
-
     public static void main(String[] args) {
-       byte[] test={1, 15, 127, 6, 45};
-       WriteBits(test);
-       byte[] encoded= encode(test, (byte) 5);
-       System.out.println(test.length);
-    //   WriteBits(encoded);
-/*
-      //Add some errorss
-        BitArray test2= new BitArray(encoded);
-        test2.setBoolValue(0,!test2.getBoolValue(0));
-        test2.setBoolValue(1,!test2.getBoolValue(1));
-        test2.setBoolValue(2,!test2.getBoolValue(2));
+        byte[] test = {1, 15, 127, 6, 45};
+        System.out.println("Init...");
+        BitArray.WriteBits(test);
 
-        byte[] decoded= decode(encoded,(byte) 5);
-        WriteBits(decoded);
+        byte[] encoded = encode(test, (byte) 5);
+        System.out.println("Encode...");
+        BitArray.WriteBits(encoded);
 
-        if(test.length ==decoded.length){
-            boolean fail =false;
-            for (int i=0; i<test.length; i++){
-                if(test[i] != decoded[i]){
-                    System.out.println("Element #" + i + "incorrect! [" + decoded[i] + "]");
-                    fail=true;
-                } else System.out.println("Element #" + i + "correct! [" + decoded[i] + "]");
+        System.out.println("Noising...");
+        int errorCount = 5;
+        BitArray withErrors = new BitArray(encoded);
+        for (int i = 0; i < errorCount; ++i) {
+            int errorOffset = (int) Math.floor(Math.random() * withErrors.length());
+            System.out.print(errorOffset);
+            System.out.print(" ");
+            withErrors.swapBit(errorOffset);
+        }
+        System.out.println();
+
+        withErrors.CopyTo(encoded);
+        BitArray.WriteBits(encoded);
+
+        byte[] decoded = decode(encoded, (byte) 5);
+        System.out.println("Decode...");
+        BitArray.WriteBits(decoded);
+
+        System.out.println("Compare");
+        if (test.length == decoded.length) {
+            boolean fail = false;
+            for (int i = 0; i < test.length; i++) {
+                if (test[i] != decoded[i]) {
+                    System.err.println("Element #" + i + " incorrect [" + decoded[i] + "]");
+                    fail = true;
+                } else {
+                    System.out.println("Element #" + i + " correct [" + decoded[i] + "]");
+                }
             }
 
-            if(!fail){
+            if (!fail) {
+                System.out.println();
                 System.out.println("Decoded correctly");
-            } else System.out.println("Length incorrect");
-        } */
-       /* for (byte b: test) {
-            String s =Integer.toBinaryString(b);
-            for(int i=0; i<s.length();i++){
-                System.out.print(s.charAt(i) + "  ");
             }
-            System.out.println();
-        } */
+        } else {
+            System.out.println("Length incorrect");
+        }
     }
 }

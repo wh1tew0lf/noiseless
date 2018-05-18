@@ -1,77 +1,88 @@
-import java.util.BitSet;
+package my.thesis.noiseless.adamar;
 
 public class BitArray {
 
-    private boolean[] boolArray;
+    final int BYTE_LOG = 3;
+
+    private boolean[] _boolArray;
 
     public BitArray(int size) {
-        setBoolArray(new boolean[size]);
+        if (size > 0) {
+            setBoolArray(new boolean[size]);
+        } else {
+            throw new IllegalArgumentException("Size should be more than 0");
+        }
     }
 
-
-    public BitArray(byte[] bits) {
-        setBoolArray(new boolean[bits.length * 8]);
-        int index = 0;
-        for (byte bit : bits) {
-            String byteToBits = Integer.toBinaryString(bit);
-            int ZeroBit = 8 - byteToBits.length();
-            while (ZeroBit != 0) {
-                setBoolValue(index, false);
-                index++;
-                ZeroBit--;
-            }
-            for (char c : byteToBits.toCharArray()) {
-                if (c == '1')
-                    setBoolValue(index, true);
-                else
-                    setBoolValue(index, false);
-                index++;
-            }
+    public BitArray(byte[] bytes) {
+        this(bytes.length * Byte.SIZE);
+        for(int i = 0; i < getBoolArray().length; ++i) {
+            setBoolValue(i, 0 != (bytes[i >> BYTE_LOG] >> (Byte.SIZE - (1 + i % Byte.SIZE))) % 2);
         }
     }
 
     public BitArray(int size, boolean value) {
         setBoolArray(new boolean[size]);
-        for (boolean b : getBoolArray())
-            b = value;
+        for (int i = 0; i < getBoolArray().length; i++) {
+            setBoolValue(i, value);
+        }
     }
 
+    public void CopyTo(byte[] bytes) {
+        CopyTo(bytes, 0);
+    }
 
     public void CopyTo(byte[] bytes, int index) {
-        System.out.println(getBoolArray().length);
-        StringBuilder sb = new StringBuilder();
-        int k = 0;
         for (int i = 0; i < getBoolArray().length; i++) {
-            if (sb.length() != 8) {
-                if (getBoolArray()[i])
-                    sb.append(1);
-                else sb.append(0);
+            if (0 == i % Byte.SIZE) {
+                bytes[index + i >> BYTE_LOG] = (byte) (getBoolValue(i) ? 1 : 0);
             } else {
-                bytes[index + k] = (byte) Integer.parseInt(sb.toString(), 2);
-                k++;
-                sb.delete(0,9);
+                bytes[index + i >> BYTE_LOG] = (byte) ((bytes[index + i >> BYTE_LOG] << 1) + (getBoolValue(i) ? 1 : 0));
             }
         }
     }
 
+    public void WriteBits() {
+        for (boolean b : getBoolArray())
+            System.out.print(b ? 1 : 0);
+        System.out.println();
+    }
+
+    public static void WriteBits(byte[] bits) {
+        (new BitArray(bits)).WriteBits();
+    }
+
     public void setBoolValue(int index, boolean value) {
-        getBoolArray()[index] = value;
+        boolean[] boolArray = getBoolArray();
+        if (null != boolArray && boolArray.length > index) {
+            boolArray[index] = value;
+        } else {
+            throw new IndexOutOfBoundsException("Too big index: " + String.valueOf(index));
+        }
+    }
+
+    public void swapBit(int index) {
+        setBoolValue(index, !getBoolValue(index));
     }
 
     public boolean getBoolValue(int index) {
-        return getBoolArray()[index];
+        boolean[] boolArray = getBoolArray();
+        if (null != boolArray && boolArray.length > index) {
+            return boolArray[index];
+        } else {
+            throw new IndexOutOfBoundsException("Too big index: " + String.valueOf(index));
+        }
     }
 
-
     public void setBoolArray(boolean[] boolArray) {
-        this.boolArray = boolArray;
+        this._boolArray = boolArray;
     }
 
     public boolean[] getBoolArray() {
-        return boolArray;
+        return _boolArray;
     }
 
     public int length() {
-        return getBoolArray().length;
+        return _boolArray.length;
     }
 }
