@@ -1,5 +1,6 @@
 package my.thesis.noiseless.bch;
 
+import java.util.Arrays;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -8,7 +9,7 @@ public class BCHCoder {
     private int ninf;
     private int[] p;
     private int[] alpha_to, index_of, g;
-    private boolean debug = false;
+    private boolean debug = true;
     public static final int MAX_M = 12;
 
     public BCHCoder(int m, int len, int t) throws BchException {
@@ -255,6 +256,12 @@ public class BCHCoder {
     /// them, only detect them. We output the information bits uncorrected.
     /// </summary>
     /// <param name="recd">Received data that should be decoded</param>
+
+    /**
+     *
+     * @param recd
+     * @return
+     */
     int[] decode_bch(int[] recd) {
         int i, j, u, q, t2, count = 0, syn_error = 0;
         int[][] elp;
@@ -423,6 +430,7 @@ public class BCHCoder {
                     reg[i] = elp[u][i];
                 }
                 count = 0;
+                ///////////todo BUG there
                 for (i = 1; i <= n; i++) {
                     q = 1;
                     for (j = 1; j <= l[u]; j++)
@@ -446,20 +454,32 @@ public class BCHCoder {
                 if (count == l[u]) {
                     // no. roots = degree of elp hence <= t errors
                     for (i = 0; i < l[u]; i++) {
+                        ///////////////////////
+                        if(loc[i]==131){
+                           // loc[1]=126;
+                          //  loc[1]=135;
+                            System.out.println();//////////////Debug here
+
+                        }
+                        /////////////////////////
                         recd[loc[i]] ^= 1;
                     }
                 } else {
                     // elp has degree >t hence cannot solve
                     if (debug) {
-                        System.out.println("Incomplete decoding: errors detected");
+                        System.out.println("Incomplete decoding: errors detected, но это не точно");
                     }
-                    return null; //detecded errors count that can't be resolved
+                   if(l[u]!=t) return null; //detecded errors count that can't be resolved
                 }
             }
         }
         int[] result = new int[k];
 
         for (i = 0; i < k; ++i) {
+            if(i==115){
+                int temp = i + length - k; //131
+                System.out.println();   ///Debug here
+            }
             result[i] = recd[i + length - k];
         }
 
@@ -596,7 +616,7 @@ public class BCHCoder {
                 size = size * 2 + output[(i - 1) * 8 + (j - 1)];
             }
         }
-        if ((size <= 0) || (size > (int) Math.round(output.length / 8.0))) {
+        if ((size <= 0) || (size > (int) Math.ceil(output.length / 8.0))) {
             throw new BchException(BchErrorCode.WRONG_SIZE, String.valueOf(size));
         }
 
@@ -718,6 +738,7 @@ public class BCHCoder {
         } while ((m <= MAX_M) && ((bch.length + 1) < (8 * data.length)) && autoLen);
 
         int blocksCount = (int) Math.round((8 * data.length) / (double) (bch.length + 1));
+       // int blocksCount = (int) Math.ceil((8 * data.length) / (double) (bch.length + 1));
 
         //  int[] output = new int[bch.k*blocksCount + sizeof(int)*8];
         int[] output = new int[bch.k * blocksCount + Integer.SIZE / Byte.SIZE * 8];
@@ -742,6 +763,9 @@ public class BCHCoder {
                 throw new BchException(BchErrorCode.DECODE_ERROR);
             }
             for (int i = 0; i < tmpOutput.length; ++i) {
+                if((ind * bch.k + i)==115){
+                    System.out.println();    ///Debug here
+                }
                 output[ind * bch.k + i] = tmpOutput[i];
             }
         }
@@ -754,7 +778,7 @@ public class BCHCoder {
                 size = size * 2 + output[(i - 1) * 8 + (j - 1)];
             }
         }
-        if ((size <= 0) || (size > (int) Math.round(output.length / 8.0))) {
+        if ((size <= 0) || (size > (int) Math.ceil(output.length / 8.0))) {
             throw new BchException(BchErrorCode.WRONG_SIZE, String.valueOf(size));
         }
 
@@ -766,7 +790,12 @@ public class BCHCoder {
             }
             // int i2 = i + sizeof(int)*8;
             int i2 = i + Integer.SIZE / Byte.SIZE * 8;
-            decoded[i / 8] += output[i2] > 0 ? (byte) Math.pow(2, i2 % 8) : (byte) 0;
+            Byte temp = (byte)Math.pow(2, i2 % 8);
+            if(output[i2]  > 0){
+                if(temp>0) decoded[i / 8] += Math.pow(2, i2 % 8);
+                     else    decoded[i / 8] += (byte) 0;
+            }
+
         }
 
         return decoded;
@@ -787,18 +816,27 @@ public class BCHCoder {
         int dataLenMax = 4094;
         int blockSize = 255;
         Random rnd = new Random();
-        for (int i = 0; i < 100; ++i) {
+        for (int i = 0; i < 1000; ++i) {
             System.out.println(i);
-            System.out.println(1 + (rnd.nextInt(50) % dataLenMax));
-            byte[] data1 = new byte[1 + (rnd.nextInt(50) % dataLenMax)];
+          //  System.out.println(1 + (rnd.nextInt(50) % dataLenMax));
+           //byte[] data1 = new byte[1 + (rnd.nextInt(100) % dataLenMax)];
+          byte[] data1 = new byte[99];
+            System.out.println("Длина массива данных"+data1.length+" Двоичная сс "+Integer.toBinaryString(data1.length));
             for (int j = 0; j < data1.length; ++j) {
-                data1[j] = (byte) (rnd.nextInt(50) % 256);
+                data1[j] = (byte) (rnd.nextInt(100));
+             //   data1[j] = (byte) (84);
+              //  data1[j] = (byte) (33);
             }
+            System.out.println("DATA1->\n"+Arrays.toString(data1));////////
 
             int t = (0 == blockSize)
                     ? (1 + rnd.nextInt(50) % ((int) Math.round(data1.length * 0.17)))
-                    : (1 + rnd.nextInt(50) % ((int) Math.round(blockSize * 0.17)));
+                   //: (1 + rnd.nextInt(50) % ((int) Math.round(blockSize * 0.17)));
+                  // : (1 + rnd.nextInt(50));
+                   : (2);
+            System.out.println("Количество ошибок: "+t);
             byte[] data2 = encode_systematic(data1, t, blockSize);
+            System.out.println("DATA2->\n"+Arrays.toString(data2));////////
             int errCnt = 0;
 
             for (int j = 0; j < data1.length; ++j) {
@@ -815,12 +853,12 @@ public class BCHCoder {
             } catch (BchException e) {
                 WriteBits(data1);
                 for (int k = 0; k < data1.length; ++k) {
-                    System.out.println(data1[k]);
+                    System.out.print(data1[k]);
                 }
                 System.out.println("");
                 WriteBits(data2);
                 for (int k = 0; k < data2.length; ++k) {
-                    System.out.println(data2[k]);
+                    System.out.print(data2[k]);
                 }
                 System.out.println("");
                 throw e;
@@ -828,16 +866,23 @@ public class BCHCoder {
             if (data3.length != data1.length) {
                 throw new BchException("Incorrect len!");
             }
+            boolean error = false;
             for (int j = 0; j < data3.length; ++j) {
                 if (data1[j] != data3[j]) {
-                    throw new BchException("Incorrect value!");
+                    System.out.println(Arrays.toString(data1));
+                    System.out.println(Arrays.toString(data3));
+                  //  System.out.println("Длина массива данных"+data3.length);
+                    System.out.println("Позиция "+j);
+                    error = true;
+
                 }
             }
+            if(error) throw new BchException("Incorrect value!");
         }
         System.out.println("");
         System.out.println("Tests passed!");
-        Scanner in = new Scanner(System.in);
-        in.next();
+        //Scanner in = new Scanner(System.in);
+       // in.next();
     }
 
 }
