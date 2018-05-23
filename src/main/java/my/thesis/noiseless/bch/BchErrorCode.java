@@ -6,7 +6,7 @@ public enum BchErrorCode {
     WRONG_PARAMETRES("Parameters invalid!"),
     BIG_LENGTH("Length too big! Max length == %s !"),
     DECODE_ERROR("Can not be decoded!"),
-   WRONG_SIZE("Incorrect size %s");
+    WRONG_SIZE("Incorrect size %s");
 
 
     private String errorMesage;
